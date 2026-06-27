@@ -11,8 +11,14 @@ def create_app(config_class: type = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
-    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    try:
+        Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    try:
+        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -39,14 +45,30 @@ def create_app(config_class: type = Config) -> Flask:
 
     app.jinja_env.filters["money"] = format_money
 
+    _db_initialized = False
+
     @app.context_processor
     def inject_globals():
+        nonlocal _db_initialized
+        if not _db_initialized:
+            with app.app_context():
+                try:
+                    db.create_all()
+                    _db_initialized = True
+                except Exception:
+                    pass
+
         from models import Category
+
+        try:
+            categories = Category.query.order_by(Category.name).limit(8).all()
+        except Exception:
+            categories = []
 
         return {
             "STORE_NAME": app.config["STORE_NAME"],
             "CURRENCY_SYMBOL": app.config["CURRENCY_SYMBOL"],
-            "nav_categories": Category.query.order_by(Category.name).limit(8).all(),
+            "nav_categories": categories,
         }
 
     @app.errorhandler(403)
@@ -65,16 +87,6 @@ def create_app(config_class: type = Config) -> Flask:
     def init_db():
         db.create_all()
         print("Database tables created.")
-
-    with app.app_context():
-        import time
-        for _ in range(3):
-            try:
-                db.create_all()
-                break
-            except Exception as e:
-                app.logger.warning("Database init attempt failed: %s", e)
-                time.sleep(1)
 
     return app
 
