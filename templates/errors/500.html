@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Server Error{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center py-20 px-4">
+  <h1 class="text-9xl font-bold text-orange-600">500</h1>
+  <p class="text-2xl font-bold text-gray-900 mt-4">Something Went Wrong</p>
+  <p class="text-gray-500 mt-2">We're working to fix it. Please try again later.</p>
+  <a href="{{ url_for('shop.home') }}" class="inline-block mt-6 bg-brand-600 hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-semibold">Go Home</a>
+</div>
+{% endblock %}

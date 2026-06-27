@@ -1,0 +1,39 @@
+{% extends "admin/_base.html" %}
+{% block title %}Categories{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Categories</h1>
+
+<div class="grid md:grid-cols-2 gap-6">
+  <div class="bg-white rounded-2xl shadow-sm p-6">
+    <h2 class="font-semibold mb-3">Add Category</h2>
+    <form method="post" class="flex gap-2">
+      {{ form.hidden_tag() }}
+      {{ form.name(class="flex-1 px-4 py-2 border rounded-lg", placeholder="Category name") }}
+      <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white px-4 rounded-lg font-semibold">Add</button>
+    </form>
+    {% for e in form.name.errors %}<p class="text-xs text-red-600 mt-1">{{ e }}</p>{% endfor %}
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm p-6">
+    <h2 class="font-semibold mb-3">All Categories ({{ categories|length }})</h2>
+    {% if categories %}
+      <ul class="divide-y">
+        {% for c in categories %}
+          <li class="flex items-center justify-between py-2">
+            <div>
+              <p class="font-medium">{{ c.name }}</p>
+              <p class="text-xs text-gray-500">{{ c.products|length }} product(s) · /{{ c.slug }}</p>
+            </div>
+            <form method="post" action="{{ url_for('admin.category_delete', cat_id=c.id) }}" onsubmit="return confirm('Delete category?');">
+              <button class="text-red-600 text-sm hover:underline">Delete</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-500 text-sm">No categories yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card, pagination_links %}
+{% block title %}{% if active_category %}{{ active_category.name }}{% elif q %}Search: {{ q }}{% else %}Menu{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
+
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 reveal">
+    <div>
+      <p class="text-brand-600 text-sm font-semibold tracking-widest uppercase">
+        {% if active_category %}{{ active_category.name }}
+        {% elif q %}Search Results
+        {% else %}Our Menu{% endif %}
+      </p>
+      <h1 class="text-3xl sm:text-4xl font-fun text-gray-900 mt-1">
+        {% if active_category %}{{ active_category.name }}
+        {% elif q %}"{{ q }}"
+        {% else %}All Treats 🍪{% endif %}
+      </h1>
+      <p class="text-gray-500 mt-1 text-sm">{{ pagination.total }} treat{{ 's' if pagination.total != 1 else '' }} found</p>
+    </div>
+    <form method="get" class="flex items-center gap-2">
+      {% if active_category %}<input type="hidden" name="category" value="{{ active_category.slug }}">{% endif %}
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      <label class="text-sm text-gray-500">Sort:</label>
+      <select name="sort" onchange="this.form.submit()" class="px-4 py-2.5 border border-gray-200 rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
+        <option value="newest" {% if sort=='newest' %}selected{% endif %}>Newest</option>
+        <option value="price_asc" {% if sort=='price_asc' %}selected{% endif %}>Price: Low → High</option>
+        <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Price: High → Low</option>
+        <option value="name" {% if sort=='name' %}selected{% endif %}>Name: A-Z</option>
+      </select>
+    </form>
+  </div>
+
+  <div class="grid lg:grid-cols-[220px_1fr] gap-8">
+    <aside class="reveal-left">
+      <div class="bg-white rounded-2xl p-5 border border-gray-200/60 shadow-sm sticky top-24">
+        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span>🔍</span> Filter
+        </h3>
+        <ul class="space-y-1">
+          <li>
+            <a href="{{ url_for('shop.products') }}"
+               class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm {{ 'bg-brand-50 text-brand-700 font-semibold' if not active_category else 'text-gray-700 hover:bg-orange-50' }}">
+              <span>🍪 All Treats</span>
+            </a>
+          </li>
+          {% for cat in categories %}
+            <li>
+              <a href="{{ url_for('shop.products', category=cat.slug) }}"
+                 class="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm {{ 'bg-brand-50 text-brand-700 font-semibold' if active_category and active_category.id==cat.id else 'text-gray-700 hover:bg-orange-50' }}">
+                <span>{{ cat.name }}</span>
+                <span class="text-xs text-gray-400">{{ cat.products|length }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </aside>
+
+    <div>
+      {% if products %}
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {% for p in products %}
+            <div class="reveal-up" style="transition-delay: {{ loop.index0 % 4 * 60 }}ms">
+              {{ product_card(p) }}
+            </div>
+          {% endfor %}
+        </div>
+        {{ pagination_links(pagination, 'shop.products', {'category': request.args.get('category'), 'q': q, 'sort': sort}) }}
+      {% else %}
+        <div class="bg-white rounded-2xl p-14 text-center border border-gray-200/60 reveal">
+          <span class="text-6xl block mb-4">🔍</span>
+          <p class="text-gray-500 text-lg font-medium">No treats found</p>
+          <p class="text-gray-400 text-sm mt-1">Try a different category or search.</p>
+          <a href="{{ url_for('shop.products') }}" class="inline-flex items-center gap-2 mt-5 text-brand-600 font-semibold">
+            ← Browse All
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
+
+  <nav class="text-sm text-gray-400 mb-8 reveal">
+    <a href="{{ url_for('shop.home') }}" class="hover:text-brand-600 transition">🏠 Home</a>
+    <span class="mx-1">/</span>
+    <a href="{{ url_for('shop.products') }}" class="hover:text-brand-600 transition">🍪 Menu</a>
+    {% if product.category %}
+      <span class="mx-1">/</span>
+      <a href="{{ url_for('shop.products', category=product.category.slug) }}" class="hover:text-brand-600 transition">{{ product.category.name }}</a>
+    {% endif %}
+    <span class="mx-1">/</span>
+    <span class="text-gray-900">{{ product.name }}</span>
+  </nav>
+
+  <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 reveal">
+    <div class="img-zoom-container bg-white rounded-2xl overflow-hidden aspect-square cursor-crosshair border border-gray-200/60 shadow-sm">
+      {% if product.image %}
+        <img src="{{ product.image if product.image.startswith('http') else url_for('static', filename='uploads/' ~ product.image) }}"
+             alt="{{ product.name }}" class="w-full h-full object-cover transition-transform duration-500"
+             style="will-change: transform;">
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center text-gray-200">
+          <span class="text-8xl">🍪</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="flex flex-col">
+      {% if product.category %}
+        <p class="text-brand-600 text-sm font-semibold tracking-widest uppercase">{{ product.category.name }}</p>
+      {% endif %}
+      <h1 class="text-3xl lg:text-4xl font-fun text-gray-900 mt-2">{{ product.name }}</h1>
+
+      {% if product.reviews %}
+        <div class="flex items-center gap-2 mt-3">
+          <div class="flex gap-0.5">
+            {% for i in range(1,6) %}
+              <span class="text-lg {{ 'text-yellow-400' if i <= product.average_rating else 'text-gray-200' }}">★</span>
+            {% endfor %}
+          </div>
+          <span class="text-sm text-gray-500">{{ product.average_rating }} ({{ product.review_count }})</span>
+        </div>
+      {% endif %}
+
+      <div class="mt-5">
+        <span class="text-4xl font-bold text-gray-900">{{ product.price|money }}</span>
+        {% if product.in_stock %}
+          <span class="ml-3 text-sm text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full">✓ In Stock</span>
+        {% endif %}
+      </div>
+
+      <div class="my-5 h-px bg-gray-200/60"></div>
+
+      <p class="text-gray-600 leading-relaxed">{{ product.description or 'No description available.' }}</p>
+
+      <!-- Size selector for cakes/pastries -->
+      {% if product.category and product.category.name|lower in ['cakes', 'cupcakes', 'pastries'] %}
+        <div class="mt-5">
+          <p class="text-sm font-semibold text-gray-900 mb-2">📏 Size</p>
+          <div class="swatch-group flex flex-wrap gap-2">
+            {% for s in ['Small (6\")', 'Medium (8\")', 'Large (10\")'] %}
+              <button class="swatch px-4 py-2 text-sm border border-gray-200 rounded-full hover:border-brand-400 hover:text-brand-600 transition {% if s == 'Medium (8\")' %}active border-brand-500 text-brand-600 bg-brand-50{% endif %}">{{ s }}</button>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Flavor selector -->
+      {% if product.category and product.category.name|lower in ['cakes', 'cupcakes', 'donuts'] %}
+        <div class="mt-4">
+          <p class="text-sm font-semibold text-gray-900 mb-2">🎨 Flavor</p>
+          <div class="swatch-group flex flex-wrap gap-2">
+            {% for flavor, hex in [('Vanilla','#fef3c7'),('Chocolate','#5c3a1e'),('Strawberry','#fbcfe8'),('Caramel','#d97706')] %}
+              <button class="swatch flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-full hover:border-brand-400 transition {% if flavor == 'Vanilla' %}active border-brand-500 bg-brand-50{% endif %}">
+                <span class="w-3.5 h-3.5 rounded-full border border-gray-300" style="background:{{ hex }}"></span>
+                {{ flavor }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="mt-6 space-y-3">
+        {% if product.in_stock %}
+          {% if product.stock < 10 %}
+            <p class="text-sm text-amber-600 font-medium bg-amber-50 px-3 py-1.5 rounded-full inline-flex items-center gap-1">⚠️ Only {{ product.stock }} left — grab it fast!</p>
+          {% endif %}
+          {% if current_user.is_authenticated %}
+            <form method="post" action="{{ url_for('cart.add', product_id=product.id) }}" class="flex items-stretch gap-2">
+              <div class="qty-stepper flex items-center border border-gray-200 rounded-full overflow-hidden bg-white">
+                <button type="button" class="qty-minus px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition">−</button>
+                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}"
+                       class="qty-input w-12 text-center border-x border-gray-200 py-2 text-sm font-medium focus:outline-none">
+                <button type="button" class="qty-plus px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition">+</button>
+              </div>
+              <button type="submit" class="add-to-cart-btn flex-1 bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-full font-semibold transition flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-95">
+                <span>Add to Cart</span>
+                <span>🛒</span>
+              </button>
+            </form>
+          {% else %}
+            <a href="{{ url_for('auth.login', next=request.path) }}"
+               class="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3 rounded-full font-semibold transition shadow-sm w-full sm:w-auto">
+              🔑 Login to Order
+            </a>
+          {% endif %}
+        {% else %}
+          <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl flex items-center gap-3">
+            <span class="text-2xl">😢</span>
+            <div>
+              <p class="font-semibold">Sold Out!</p>
+              <p class="text-sm text-red-500">This treat's all gone. Check back soon!</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-gray-500">
+        <div class="bg-orange-50 rounded-xl py-2.5">🚚 Free Delivery</div>
+        <div class="bg-orange-50 rounded-xl py-2.5">🌅 Baked Fresh</div>
+        <div class="bg-orange-50 rounded-xl py-2.5">💛 Love Guaranteed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews -->
+  <div class="mt-14 lg:mt-20 reveal">
+    <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/60">
+      <h2 class="text-2xl font-fun text-gray-900">Reviews 💬</h2>
+
+      {% if current_user.is_authenticated %}
+        <div class="bg-orange-50 rounded-xl p-5 mt-5">
+          <h3 class="font-semibold mb-3">{{ 'Update your review' if user_review else 'Share your thoughts ✍️' }}</h3>
+          <form method="post" action="{{ url_for('reviews.add', product_id=product.id) }}" class="space-y-4">
+            {{ review_form.hidden_tag() }}
+            <div>
+              {{ review_form.rating.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+              <div class="star-rating-input flex gap-1">
+                {% for i in range(1,6) %}
+                  <button type="button" data-value="{{ i }}" class="star text-2xl text-gray-300 hover:text-yellow-400 transition cursor-pointer">★</button>
+                {% endfor %}
+                <input type="hidden" name="rating" value="{{ user_review.rating if user_review else 5 }}">
+              </div>
+            </div>
+            <div>
+              {{ review_form.comment.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+              {{ review_form.comment(rows=3, class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm", placeholder="How was it? 😋") }}
+            </div>
+            <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-full font-semibold transition text-sm shadow-sm">Submit 💬</button>
+          </form>
+        </div>
+      {% else %}
+        <p class="text-gray-500 mt-5"><a href="{{ url_for('auth.login') }}" class="text-brand-600 hover:underline font-medium">Login</a> to leave a review 💬</p>
+      {% endif %}
+
+      {% if product.reviews %}
+        <div class="mt-6 space-y-4">
+          {% for review in product.reviews|sort(attribute='created_at', reverse=True) %}
+            <div class="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 flex items-center justify-center font-bold text-sm">{{ review.user.name[0]|upper }}</span>
+                  <div>
+                    <p class="font-semibold text-gray-900 text-sm">{{ review.user.name }}</p>
+                    <div class="flex gap-0.5 mt-0.5">
+                      {% for i in range(1,6) %}
+                        <span class="text-xs {{ 'text-yellow-400' if i <= review.rating else 'text-gray-200' }}">★</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                <span class="text-xs text-gray-400">{{ review.created_at.strftime('%b %d, %Y') }}</span>
+              </div>
+              {% if review.comment %}
+                <p class="text-gray-600 text-sm mt-2">{{ review.comment }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-8 text-gray-400">
+          <span class="text-4xl block mb-3">💬</span>
+          <p>No reviews yet. Be the first!</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Related -->
+  {% if related %}
+    <div class="mt-14 lg:mt-20">
+      <div class="flex items-end justify-between mb-8 reveal">
+        <div>
+          <p class="text-brand-600 text-sm font-semibold tracking-widest uppercase">More to Love</p>
+          <h2 class="text-2xl sm:text-3xl font-fun text-gray-900 mt-1">You Might Also Like 😋</h2>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+        {% for p in related %}
+          <div class="reveal-up" style="transition-delay: {{ loop.index0 * 80 }}ms">
+            {{ product_card(p) }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import pagination_links %}
+{% block title %}Manage Products{% endblock %}
+
+{% block admin_content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Products</h1>
+  <a href="{{ url_for('admin.product_create') }}" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-semibold">+ Add Product</a>
+</div>
+
+<form method="get" class="bg-white rounded-2xl shadow-sm p-4 mb-4 flex gap-2">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search products..." class="flex-1 px-4 py-2 border rounded-lg">
+  <button class="bg-gray-800 text-white px-5 rounded-lg">Search</button>
+</form>
+
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-700 text-left">
+        <tr>
+          <th class="p-3">Product</th>
+          <th class="p-3">Category</th>
+          <th class="p-3">Price</th>
+          <th class="p-3">Stock</th>
+          <th class="p-3">Status</th>
+          <th class="p-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for p in products %}
+          <tr class="hover:bg-gray-50">
+            <td class="p-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                  {% if p.image %}
+                    <img src="{{ p.image if p.image.startswith('http') else url_for('static', filename='uploads/' ~ p.image) }}" class="w-full h-full object-cover" alt="">
+                  {% endif %}
+                </div>
+                <span class="font-medium">{{ p.name }}</span>
+              </div>
+            </td>
+            <td class="p-3">{{ p.category.name if p.category else '—' }}</td>
+            <td class="p-3 font-semibold">{{ p.price|money }}</td>
+            <td class="p-3">
+              <span class="{{ 'text-red-600 font-semibold' if p.stock == 0 else 'text-orange-600 font-semibold' if p.stock < 5 else '' }}">{{ p.stock }}</span>
+            </td>
+            <td class="p-3">
+              {% if p.is_active %}
+                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">ACTIVE</span>
+              {% else %}
+                <span class="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs font-semibold">HIDDEN</span>
+              {% endif %}
+            </td>
+            <td class="p-3">
+              <div class="flex gap-2">
+                <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="text-brand-600 hover:underline">Edit</a>
+                <form method="post" action="{{ url_for('admin.product_delete', product_id=p.id) }}" onsubmit="return confirm('Delete this product?');">
+                  <button class="text-red-600 hover:underline">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="p-6 text-center text-gray-500">No products found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{ pagination_links(pagination, 'admin.products', {'q': q}) }}
+{% endblock %}

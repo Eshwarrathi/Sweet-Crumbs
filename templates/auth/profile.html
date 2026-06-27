@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+
+  <div class="bg-white rounded-2xl shadow-sm p-8">
+    <div class="flex items-center gap-4 mb-6">
+      <span class="w-16 h-16 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-2xl font-bold">{{ current_user.name[0]|upper }}</span>
+      <div>
+        <h2 class="text-xl font-bold">{{ current_user.name }}</h2>
+        <p class="text-gray-500">{{ current_user.email }}</p>
+        {% if current_user.is_admin %}<span class="inline-block mt-1 px-2 py-0.5 bg-brand-100 text-brand-700 text-xs rounded font-semibold">ADMIN</span>{% endif %}
+      </div>
+    </div>
+
+    <dl class="grid sm:grid-cols-2 gap-4 text-sm">
+      <div><dt class="text-gray-500">Phone</dt><dd class="font-medium">{{ current_user.phone or '—' }}</dd></div>
+      <div><dt class="text-gray-500">City</dt><dd class="font-medium">{{ current_user.city or '—' }}</dd></div>
+      <div class="sm:col-span-2"><dt class="text-gray-500">Address</dt><dd class="font-medium">{{ current_user.address or '—' }}</dd></div>
+      <div><dt class="text-gray-500">Member since</dt><dd class="font-medium">{{ current_user.created_at.strftime('%b %d, %Y') }}</dd></div>
+      <div><dt class="text-gray-500">Total orders</dt><dd class="font-medium">{{ current_user.orders|length }}</dd></div>
+    </dl>
+
+    <div class="mt-6 flex gap-3">
+      <a href="{{ url_for('orders.list_orders') }}" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg font-semibold">View My Orders</a>
+      <a href="{{ url_for('auth.logout') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-lg font-semibold">Logout</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import pagination_links %}
+{% block title %}Manage Orders{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
+
+<div class="flex gap-2 mb-4 flex-wrap">
+  {% set statuses = ['', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'] %}
+  {% for s in statuses %}
+    <a href="{{ url_for('admin.orders', status=s) }}"
+       class="px-3 py-1.5 rounded-full text-sm font-medium {{ 'bg-brand-600 text-white' if status == s else 'bg-white border hover:bg-gray-50' }}">
+      {{ s|capitalize if s else 'All' }}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-700 text-left">
+        <tr>
+          <th class="p-3">Order ID</th>
+          <th class="p-3">Customer</th>
+          <th class="p-3">Date</th>
+          <th class="p-3">Items</th>
+          <th class="p-3">Total</th>
+          <th class="p-3">Payment</th>
+          <th class="p-3">Status</th>
+          <th class="p-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for o in orders %}
+          {% set status_colors = {'pending':'bg-yellow-100 text-yellow-800','paid':'bg-blue-100 text-blue-800','shipped':'bg-purple-100 text-purple-800','delivered':'bg-green-100 text-green-800','cancelled':'bg-red-100 text-red-800'} %}
+          <tr class="hover:bg-gray-50">
+            <td class="p-3 font-semibold">#{{ o.id }}</td>
+            <td class="p-3">
+              <p class="font-medium">{{ o.user.name }}</p>
+              <p class="text-xs text-gray-500">{{ o.user.email }}</p>
+            </td>
+            <td class="p-3 text-gray-600">{{ o.created_at.strftime('%b %d, %Y') }}</td>
+            <td class="p-3">{{ o.item_count }}</td>
+            <td class="p-3 font-semibold">{{ o.total|money }}</td>
+            <td class="p-3 text-xs uppercase">{{ o.payment_method }}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-xs font-semibold uppercase {{ status_colors.get(o.status, 'bg-gray-100') }}">{{ o.status }}</span>
+            </td>
+            <td class="p-3"><a href="{{ url_for('admin.order_detail', order_id=o.id) }}" class="text-brand-600 hover:underline">View</a></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="p-6 text-center text-gray-500">No orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{ pagination_links(pagination, 'admin.orders', {'status': status}) }}
+{% endblock %}

@@ -1,0 +1,79 @@
+{% macro product_card(product) %}
+<a href="{{ url_for('shop.product_detail', slug=product.slug) }}"
+   class="card-tilt group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col border border-gray-200/60">
+  <div class="relative aspect-square bg-orange-50 overflow-hidden">
+    {% if product.image %}
+      {% if product.image.startswith('http') %}
+        <img src="{{ product.image }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" loading="lazy">
+      {% else %}
+        <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" loading="lazy">
+      {% endif %}
+    {% else %}
+      <div class="w-full h-full flex items-center justify-center text-5xl">🍪</div>
+    {% endif %}
+    {% if not product.in_stock %}
+      <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+        <span class="bg-white text-gray-900 text-xs font-bold px-4 py-1.5 rounded-full">Sold Out 😢</span>
+      </div>
+    {% elif product.stock < 5 %}
+      <span class="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">🔥 Only {{ product.stock }} left</span>
+    {% endif %}
+  </div>
+  <div class="p-3.5 flex-1 flex flex-col">
+    {% if product.category %}
+      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-medium">{{ product.category.name }}</p>
+    {% endif %}
+    <h3 class="font-semibold text-gray-900 mt-0.5 line-clamp-2 group-hover:text-brand-600 transition text-sm leading-snug">{{ product.name }}</h3>
+    {% if product.average_rating %}
+      <div class="flex items-center gap-1 mt-1.5">
+        <div class="flex gap-0.5">
+          {% for i in range(1,6) %}
+            <span class="text-[10px] {{ 'text-yellow-400' if i <= product.average_rating else 'text-gray-200' }}">★</span>
+          {% endfor %}
+        </div>
+        <span class="text-gray-400 text-[10px]">({{ product.review_count }})</span>
+      </div>
+    {% endif %}
+    <div class="mt-auto pt-2.5 flex items-center justify-between">
+      <span class="text-base font-bold text-gray-900">{{ product.price|money }}</span>
+      {% if product.in_stock %}
+        <span class="text-xs bg-brand-50 text-brand-600 font-medium px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+          🛒 Add
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</a>
+{% endmacro %}
+
+
+{% macro pagination_links(pagination, endpoint, extra={}) %}
+{% if pagination.pages > 1 %}
+<nav class="flex justify-center items-center gap-2 mt-8 reveal">
+  {% if pagination.has_prev %}
+    <a href="{{ url_for(endpoint, page=pagination.prev_num, **extra) }}"
+       class="flex items-center gap-1 px-4 py-2.5 bg-white border border-gray-200 rounded-full hover:bg-gray-50 text-sm font-medium transition shadow-sm">
+      ← Prev
+    </a>
+  {% endif %}
+  {% for p in pagination.iter_pages() %}
+    {% if p %}
+      {% if p == pagination.page %}
+        <span class="px-4 py-2.5 bg-brand-500 text-white rounded-full font-semibold text-sm shadow-sm">{{ p }}</span>
+      {% else %}
+        <a href="{{ url_for(endpoint, page=p, **extra) }}"
+           class="px-4 py-2.5 bg-white border border-gray-200 rounded-full hover:bg-gray-50 text-sm font-medium transition shadow-sm">{{ p }}</a>
+      {% endif %}
+    {% else %}
+      <span class="px-2 text-gray-300">...</span>
+    {% endif %}
+  {% endfor %}
+  {% if pagination.has_next %}
+    <a href="{{ url_for(endpoint, page=pagination.next_num, **extra) }}"
+       class="flex items-center gap-1 px-4 py-2.5 bg-white border border-gray-200 rounded-full hover:bg-gray-50 text-sm font-medium transition shadow-sm">
+      Next →
+    </a>
+  {% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

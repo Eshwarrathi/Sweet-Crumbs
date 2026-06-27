@@ -1,0 +1,57 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import pagination_links %}
+{% block title %}Manage Users{% endblock %}
+
+{% block admin_content %}
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Users</h1>
+
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-700 text-left">
+        <tr>
+          <th class="p-3">User</th>
+          <th class="p-3">Email</th>
+          <th class="p-3">Joined</th>
+          <th class="p-3">Orders</th>
+          <th class="p-3">Role</th>
+          <th class="p-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for u in users %}
+          <tr class="hover:bg-gray-50">
+            <td class="p-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold">{{ u.name[0]|upper }}</span>
+                <span class="font-medium">{{ u.name }}</span>
+              </div>
+            </td>
+            <td class="p-3 text-gray-600">{{ u.email }}</td>
+            <td class="p-3 text-gray-600">{{ u.created_at.strftime('%b %d, %Y') }}</td>
+            <td class="p-3">{{ u.orders|length }}</td>
+            <td class="p-3">
+              {% if u.is_admin %}
+                <span class="px-2 py-0.5 bg-brand-100 text-brand-700 rounded text-xs font-semibold">ADMIN</span>
+              {% else %}
+                <span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-semibold">CUSTOMER</span>
+              {% endif %}
+            </td>
+            <td class="p-3">
+              {% if u.id != current_user.id %}
+                <form method="post" action="{{ url_for('admin.toggle_admin', user_id=u.id) }}" onsubmit="return confirm('Toggle admin role for this user?');">
+                  <button class="text-brand-600 hover:underline text-sm">{{ 'Demote' if u.is_admin else 'Make Admin' }}</button>
+                </form>
+              {% else %}
+                <span class="text-xs text-gray-400">You</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{ pagination_links(pagination, 'admin.users') }}
+{% endblock %}
