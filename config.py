@@ -6,9 +6,13 @@ BASE_DIR = Path(__file__).resolve().parent
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-in-production-please")
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+
+    _database_url = os.environ.get(
         "DATABASE_URL", f"sqlite:///{BASE_DIR / 'instance' / 'shop.db'}"
     )
+    if _database_url.startswith("postgres://"):
+        _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = _database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"

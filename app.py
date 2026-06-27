@@ -67,7 +67,14 @@ def create_app(config_class: type = Config) -> Flask:
         print("Database tables created.")
 
     with app.app_context():
-        db.create_all()
+        import time
+        for _ in range(3):
+            try:
+                db.create_all()
+                break
+            except Exception as e:
+                app.logger.warning("Database init attempt failed: %s", e)
+                time.sleep(1)
 
     return app
 
